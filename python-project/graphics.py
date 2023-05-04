@@ -8,8 +8,31 @@ import matplotlib.pyplot as plt
 import scipy.io
 
 # Setting up
-PATH_TO_DS = "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/ProgettoEEG/BED_Biometric_EEG_dataset/BED/RAW_PARSED/"
+# "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/ProgettoEEG/BED_Biometric_EEG_dataset/BED/RAW_PARSED/"
+PATH_TO_DS = "C:\Users\Simone\Documents\01 Università\Fondamenti di Visione Artificiale e Biometria\BED_Biometric_EEG_dataset\BED\RAW_PARSED"
 #matplotlib.use('TkAgg')
+def show_graphic(raw, column_list = None, min_age=0, max_age=-1):
+    """
+    Shows the graphic of the input mne RAW DataStructure
+    :param raw: the mne raw data structure containing the measurements
+    :param column_list: the list of columns to be put in the graphics
+    :param min_age: the starting time to show the measurements
+    :param max_age: the last time to show the measurements
+    :return: None
+    """
+    if column_list is None:
+        column_list = raw.ch_names[2:10]
+    to_show = mne.pick_channels(raw.ch_names, column_list)
+    start, stop = raw.time_as_index([raw.times[min_age], raw.times[max_age]])
+    data, times = raw[to_show, start:stop]
+
+    fig, ax = plt.subplots()
+    ax.plot(times, data.T)
+    for idx, pick in enumerate(to_show):
+        ax.plot(raw.times, raw._data[pick], label=labels_to_show[idx])
+    ax.set(xlabel="Time (s)", ylabel = "Frequency (mV)", title="EEG Data")
+    ax.legend()
+    plt.show()
 
 # Load matlab files into pandas DataFrame
 dataset = scipy.io.loadmat(PATH_TO_DS+"s1_s1.mat")
@@ -31,7 +54,9 @@ ica.fit(raw)
 ica.exclude = [0, 1, 16]
 ica.apply(raw)
 
+show_graphic(raw)
 #ARCC
+
 """
 ar = AutoReject()
 segment_len = 3.0
@@ -55,16 +80,3 @@ clean_raw.plot()
 print(_)
 """
 
-# Show graphics
-labels_to_show = raw.ch_names[2:10]
-to_show = mne.pick_channels(raw.ch_names, labels_to_show)
-start, stop = raw.time_as_index([raw.times[0], raw.times[-1]]) # Select 100 seconds of signals
-data, times = raw[to_show, start:stop]
-
-fig, ax = plt.subplots()
-ax.plot(times, data.T)
-for idx, pick in enumerate(to_show):
-    ax.plot(raw.times, raw._data[pick], label=labels_to_show[idx])
-ax.set(xlabel="Time (s)", ylabel = "Frequency (mV)", title="EEG Data (F3)")
-ax.legend()
-plt.show()
