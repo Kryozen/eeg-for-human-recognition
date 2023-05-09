@@ -3,7 +3,8 @@ import mne
 import pandas as pd
 import numpy as np
 from mne.preprocessing import ICA
-from mne.time_frequency import psd_array_multitaper, morlet
+from mne.time_frequency import psd_array_multitaper
+from mne.time_frequency import tfr_array_morlet
 
 # Setting up
 
@@ -27,6 +28,7 @@ def load(path):
     # Creating mne RAW data structure
     mne_info = mne.create_info(ch_names=labels, sfreq=1000, ch_types="eeg")
     raw = mne.io.RawArray(df.values.T, mne_info)
+
     return raw
 
 def ica_processing(raw, excluded_list=None):
@@ -100,3 +102,19 @@ def compute_wavelet_transform(raw):
     :param raw: the mne data structure providing the measurements to compute the wavelet transform
     :return: the wavelet features extracted and their names
     """
+    # Setup the wavelet parameters
+    sfreq = raw.info['sfreq']
+    freqs = [10, 20, 30]
+    n_cycles = 5
+
+    # Compute the wavelet transform
+    tfr = tfr_array_morlet(raw.get_data(), sfreq=sfreq, freqs=freqs, n_cycles=n_cycles)
+
+    # Compute wavelet features
+    mean_energy = np.mean(np.abs(tfr) ** 2, axis=2)
+
+    # Concatenate results
+    wavelet_features = np.concatenate((mean_energy))
+    wavelet_features_names = np.array(['Mean energy'])
+
+    return wavelet_features, wavelet_features_names

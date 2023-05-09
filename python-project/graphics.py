@@ -50,3 +50,10 @@ if __name__ == '__main__':
 
     # Compute spectral features
     spectral_features, spectral_features_names = pr.compute_spectral_features(raw)
+
+    # Compute wavelet features
+    # wavelet_features, wavelet_features_names = pr.compute_wavelet_transform(raw)
+
+    show_graphic(raw)
+    plt.plot(spectral_features)
+    plt.show()
