@@ -44,10 +44,10 @@ def load(path, samp_freq=256):
             dataset = scipy.io.loadmat(dataset_path)
             recordings.extend(dataset['recording'])
 
-    print("Final length: {}".format(len(recordings)))
+    print("INFO: loading {} measurements in pandas dataframe.".format(len(recordings)))
 
-    # df = pd.DataFrame(recordings, columns=labels)
-    # df = df.drop(["INTERPOLATED"], axis=1)
+    df = pd.DataFrame(recordings, columns=labels)
+    df = df.drop(["INTERPOLATED"], axis=1)
 
     return df
 
