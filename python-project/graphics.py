@@ -1,4 +1,6 @@
+import loading
 import preprocessing as pr
+import classification as cl
 import matplotlib.pyplot as plt
 
 
@@ -17,14 +19,32 @@ def show_graphic(df_struct):
 
 
 if __name__ == '__main__':
-    df = pr.load(pr.PATH_TO_DS_1)
+    users_measurements = loading.load(loading.PATH_TO_DS_1)
     # matplotlib.use('TkAgg')    # Uncomment if you want to set the display controller for matplotlib
 
+    print("## INFO: starting preprocessing...")
+
     # Apply a butterworth bandpass filter
-    df = pr.bandpass_filter(df)
+    new_users_measurements = []
+    for user_measurements in users_measurements:
+        new_user_measurements = pr.bandpass_filter(user_measurements)
+        new_users_measurements.append(new_user_measurements)
+
+    users_measurements = new_users_measurements
 
     # Apply indipendent component analysis to reduce the complexity of the signal
-    # ica_values = pr.ica_processing(df, 16)
+    # ica_values = []
+    # for user_measurement in users_measurements:
+    #     n_components = 16
+    #     current_user_ica_values = pr.ica_processing(user_measurement, n_components)
+    #     ica_values.append(current_user_ica_values)
 
-    # Compute the AutoRegressive Reflection Coefficients
-    arrc_values = pr.compute_arrc(df)
+    print("## INFO: starting classification...")
+
+    users_names = [i for i in range(loading._users_limit)]
+    gathered_df = loading.gather(users_measurements, users_names)
+    meas_train, meas_test, names_train, names_test = cl.train_test_split(gathered_df.drop(["ID"], axis=1), gathered_df["ID"])
+    svm = cl.train(meas_train, names_train)
+    predictions, acc = cl.test(svm, meas_test, names_test)
+
+    print("Accuracy: {}%".format(acc))
