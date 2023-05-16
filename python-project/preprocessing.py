@@ -1,19 +1,19 @@
 import scipy
 import pandas as pd
 import statsmodels.api as sm
-import numpy as np
 from scipy import signal
 from sklearn.decomposition import FastICA
-
 
 
 # Setting up
 PATH_TO_DS_1 = "/home/smasu/Documents/FVAB/BED_Biometric_EEG_dataset/BED_Biometric_EEG_dataset/BED/RAW_PARSED/"
 PATH_TO_DS_2 = "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/ProgettoEEG/BED_Biometric_EEG_dataset/BED/RAW_PARSED/"
-# Set the limit of users' data to populate the pandas dataframe. Choose values between 2 and 22
-_users_limit = 5
-# Set the limit of sessions to use for the pandas dataframe. Choose values between 2 and 4
-_session_limit = 2
+# Set the limit of users' data to populate the pandas dataframe. Choose values between 1 and 21
+_users_limit = 1
+# Set the limit of sessions to use for the pandas dataframe. Choose values between 1 and 3
+_session_limit = 1
+# Set True if you want to show logs
+_logging = True
 
 def load(path, samp_freq=256):
     """
@@ -24,8 +24,8 @@ def load(path, samp_freq=256):
     # Loading 18 labels as given in the instructions
 
     labels = [
-    #    'COUNTER',         # this field is removed
-    #    'INTERPOLATED',    # this field is removed
+        'COUNTER',         # this field should be ignored
+        'INTERPOLATED',    # this field should be ignored
         'F3',
         'FC5',
         'AF3',
@@ -43,37 +43,27 @@ def load(path, samp_freq=256):
         'UNIX_TIMESTAMP'
     ]
 
-    recordings = None
+    recordings = []
 
-    for i in range(1, _users_limit):
-        for j in range(1, _session_limit):
+    for i in range(1, _users_limit + 1):
+        for j in range(1, _session_limit + 1):
+            # Reading .mat file
             dataset_path = "{0}s{1}_s{2}.mat".format(path, i, j)
+
+            # Loading .mat file
             dataset = scipy.io.loadmat(dataset_path)
+
+            # Extracting recordings
             table = dataset['recording']
 
-            print(table)
+            # Gathering recordings
+            recordings.extend(table)
 
-            if i == 1:
-                clean_row = table[0]
-                table = np.delete(table, 0)
-                # Remove COUNTER
-                clean_row = np.delete(clean_row, 0)
-                # Remove INTERPOLATED
-                clean_row = np.delete(clean_row, 0)
+    # Logging
+    if _logging:
+        print("INFO: loading {} measurements in pandas dataframe.".format(len(recordings)))
 
-                recordings = [clean_row]
-            for row in table:
-                # Remove COUNTER
-                clean_row = np.delete(row, 0)
-                # Remove INTERPOLATED
-                clean_row = np.delete(clean_row, 0)
-
-                print(row)
-
-                recordings = np.vstack([recordings, clean_row])
-
-    print("INFO: loading {} measurements in pandas dataframe.".format(len(recordings)))
-
+    # Create the dataframe
     df = pd.DataFrame(recordings, columns=labels)
 
     return df
@@ -128,27 +118,49 @@ def compute_arrc(df, segment_len=3.0):
     """
 
     # Convert DataFrame to a numpy array
-    data = df.values
+    data = df.values.T
 
+    """ Qui parte la prova """
+    # For each sensor
+    for sensor in data:
+        # Estimate the optimal AR order using information criteria
+        order = sm.tsa.arma_order_select_ic(sensor, ic='aic')['aic_min_order']
+
+        print(order)
+
+        # Fit the Vector of AutoRegressive coefficents
+        var_model = sm.tsa.VAR(sensor)
+
+        # Estimate VAR coefficients using the optimal order (Akaike Information Criterion)
+        var_result = var_model.fit(maxlags=order, ic='aic')
+        var_coeffs = var_result.coefs
+
+    # Extract the AR reflection coefficients from the VAR coefficients
+    arrc_coeffs = var_coeffs[:, 1:, :]  # Exclude the intercept coefficient
+
+    print(arrc_coeffs)
+    """ Qui finisce la prova """
+    """
     # Estimate the optimal AR order using information criteria
     order = sm.tsa.arma_order_select_ic(data, ic='aic')['aic_min_order']
-
+    
     # Fit a VAR model to the data
     var_model = sm.tsa.VAR(data)
-
+    
     # Estimate VAR coefficients using the optimal order (Akaike Information Criterion)
     var_result = var_model.fit(maxlags=order, ic='aic')
     var_coeffs = var_result.coefs
 
     # Extract the AR reflection coefficients from the VAR coefficients
     arrc_coeffs = var_coeffs[:, 1:, :]  # Exclude the intercept coefficient
+    """
 
     return arrc_coeffs
 
 def compute_spectral_features(df):
     """
     Computes the spectral features for the raw data structure provided
-    :param raw: the raw data structure
+    :param df: the dataframe data structure
     :return: the spectral features and the names of the extracted features
     """
 
