@@ -44,7 +44,9 @@ if __name__ == '__main__':
     users_names = [i for i in range(loading._users_limit)]
     gathered_df = loading.gather(users_measurements, users_names)
     meas_train, meas_test, names_train, names_test = cl.train_test_split(gathered_df.drop(["ID"], axis=1), gathered_df["ID"])
+    print("## INFO: starting training...")
     svm = cl.train(meas_train, names_train)
+    print("## INFO: starting testing...")
     predictions, acc = cl.test(svm, meas_test, names_test)
 
     print("Accuracy: {}%".format(acc))
