@@ -3,7 +3,10 @@ import pandas as pd
 
 # Setting up
 PATH_TO_DS_1 = "/home/smasu/Documents/FVAB/BED_Biometric_EEG_dataset/BED_Biometric_EEG_dataset/BED/RAW_PARSED/"
+PATH_TO_DS_1_PREP = "/home/smasu/Documents/FVAB/BED_Biometric_EEG_dataset/BED_Biometric_EEG_dataset/BED/Features/Verification/"
 PATH_TO_DS_2 = "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/ProgettoEEG/BED_Biometric_EEG_dataset/BED/RAW_PARSED/"
+PATH_TO_DS_2_PREP = "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/ProgettoEEG/BED_Biometric_EEG_dataset/BED/Features/Verification/"
+
 # Set the limit of users' data to populate the pandas dataframe. Choose values between 1 and 21
 _users_limit = 5
 # Set the limit of sessions to use for the pandas dataframe. Choose values between 1 and 3
@@ -12,7 +15,7 @@ _session_limit = 2
 _logging = True
 
 
-def load(path, samp_freq=256):
+def load(path):
     """
     Loads the matlib dataset into a pandas data stracture
     :param path: the path to the dataset

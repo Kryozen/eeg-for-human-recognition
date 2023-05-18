@@ -1,7 +1,8 @@
 import sklearn.model_selection
 
 
-def train_test_split(users_measurements, users_names, perc_train=70, rand_state=42):
+
+def train_test_split_random(users_measurements, users_names, perc_train=70, rand_state=42):
     """
 
     :param users_measurements:
@@ -18,7 +19,7 @@ def train_test_split(users_measurements, users_names, perc_train=70, rand_state=
 
     return meas_train, meas_test, names_train, names_test
 
-def train(meas_train, names_train):
+def train_svm(meas_train, names_train):
     """
     Trains a support vector machine.
     :param meas_train: The measurements on which the svm will be trained
@@ -34,7 +35,7 @@ def train(meas_train, names_train):
     return svm
 
 
-def test(svm, meas_test, names_test):
+def test_svm(svm, meas_test, names_test):
     """
     Tests an already trained svm
     :param svm: a trained svm

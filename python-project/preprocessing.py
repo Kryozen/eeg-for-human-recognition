@@ -1,4 +1,5 @@
 import pandas as pd
+import pywt
 from scipy import signal
 from sklearn.decomposition import FastICA
 
@@ -40,40 +41,12 @@ def ica_processing(df, n_components=None):
     :param n_components: the number of indipendent components to extract
     :return: the values extracted
     """
+    # https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
     ICA = FastICA(n_components=n_components, whiten='unit-variance')
     ica_values = ICA.fit_transform(df.values)
 
     return ica_values
 
-"""
-def compute_arrc(df, segment_len=3.0):
-    \"""
-    Compute Auto Regressive Coefficients
-    :param df: the raw data structure
-    :return: the calculated coefficients
-    \"""
-    arrc_coeffs = []
-
-    # Convert DataFrame to a numpy array
-    data = df.values
-
-    # For each sensor
-    for sensor in data:
-        # Estimate the optimal AR order using information criteria
-        order = sm.tsa.arma_order_select_ic(sensor, ic='aic')['aic_min_order']
-
-        # Fit the Vector of AutoRegressive coefficents
-        var_model = sm.tsa.VAR(sensor)
-        var_result = var_model.fit(maxlags=order, ic='aic')
-
-        # Estimate VAR coefficients using the optimal order (Akaike Information Criterion)
-        var_coeffs = var_result.coefs
-
-        # Extract the AR reflection coefficients from the VAR coefficients
-        arrc_coeffs += var_coeffs[:, 1:, :]  # Exclude the intercept coefficient
-
-    return arrc_coeffs
-"""
 
 def compute_spectral_features(df):
     """
@@ -81,6 +54,9 @@ def compute_spectral_features(df):
     :param df: the dataframe data structure
     :return: the spectral features and the names of the extracted features
     """
+    f, psd = signal.periodogram(df.values)
+
+    return psd
 
 
 def compute_wavelet_transform(df):
@@ -89,4 +65,6 @@ def compute_wavelet_transform(df):
     :param df: the data structure providing the measurements to compute the wavelet transform
     :return: the wavelet features extracted and their names
     """
+    dwt = pywt.dwt(df.values, 'db1')
 
+    return dwt
