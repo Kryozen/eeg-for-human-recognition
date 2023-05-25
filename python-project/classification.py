@@ -44,7 +44,7 @@ def train_test_split_random(users_measurements, perc_train=70):
     x_train, y_train = np.array(x_train), np.array(y_train)
 
     # Reshape the data into 3-D array
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    # x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
 
     # splitting the x_test and y_test data sets
     x_test = []
@@ -57,7 +57,7 @@ def train_test_split_random(users_measurements, perc_train=70):
     x_test = np.array(x_test)
 
     # Reshape the data into 3-D array
-    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    # x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
 
     return x_train, x_test, y_train, y_test
 
@@ -92,8 +92,12 @@ def train_test_split_session(users_measurements, n_session_train = 2):
 def classification_by_lstm(x_train, y_train):
     # Initialising the RNN
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[0], 1)))
     model.add(Dropout(0.2))
+
+    # Convert numpy arrays into lists
+    x_train = x_train.tolist() if type(x_train) is np.ndarray else x_train
+    y_train = y_train.tolist() if type(y_train) is np.ndarray else y_train
 
     # Adding a second LSTM layer and Dropout layer
     model.add(LSTM(units=50, return_sequences=True))
