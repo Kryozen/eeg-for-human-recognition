@@ -76,6 +76,6 @@ if __name__ == '__main__':
     # Starting Classification
     print("## INFO: starting classification...")
 
-    # @todo add
+    # @todo add LSTM
 
     print("Accuracy: {}%".format(acc))

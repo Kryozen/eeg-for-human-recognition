@@ -19,34 +19,28 @@ def train_test_split_random(users_measurements, users_names, perc_train=70, rand
 
     return meas_train, meas_test, names_train, names_test
 
-def train_svm(meas_train, names_train):
+
+def train_test_split_sequence(users_measurements, perc_train=70):
     """
-    Trains a support vector machine.
-    :param meas_train: The measurements on which the svm will be trained
-    :param names_train: the names of the subjects associated to the measurements
-    :return: the trained svm
-    """
-
-    # Creates a support vector machine
-    svm = sklearn.svm.SVC()
-    # Trains the support vector machine
-    svm.fit(meas_train, names_train)
-
-    return svm
-
-
-def test_svm(svm, meas_test, names_test):
-    """
-    Tests an already trained svm
-    :param svm: a trained svm
-    :param meas_test: the subset of measurements to test the svm with
-    :param names_test: the names that should've been predicted
-    :return: the predicted values and the accuracy of the prediction
+    Splits the set of data into data for training and data for testing based on the sequence of measurements.
+    This can be used if we want to use an LSTM to achieve classification since it takes count of the sequence of values.
+    :param users_measurements: the array-like object of Measurement sets containing user_id and sessions
+    :param perc_train: the percentage of records used for training
+    :return: an array-like object of Measurement objects for training and an array-like object for testing
     """
 
-    # Predicts the names of the subjects for which are given the measurements
-    names_predicted = svm.predict(meas_test)
-    # Calculates the accuracy of the predictions
-    accuracy = sklearn.metrics.accuracy_score(names_test, names_predicted)
+def train_test_split_session(users_measurements, n_session_train = 2):
+    """
+    Splits the set of data into data for training and data for testing based on the session id contained in the Measuremnet object.
+    :param users_measurements: the array-like object of Measurement sets containing user_id and sessions
+    :param n_session_train: the number of sessions used for training (the rest will be used for testing)
+    :return: an array-like object of Measurement objects for training and an array-like object for testing
+    """
 
-    return names_predicted, accuracy
+    train_set, test_set = [], []
+    for user_measurement in users_measurements:
+        # The first n_measurements records will be used for training
+        n_measurements = user_measurement.sessions[n_session_train]
+
+        # Append the slice of measurements to the train_set
+        # @todo train_set.append(user_measurement) ADD SLICE BUILT-IN FUNC TO MEASUREMENT CLASS

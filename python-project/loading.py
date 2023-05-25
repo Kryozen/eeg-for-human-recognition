@@ -10,7 +10,7 @@ PATH_TO_DS_2 = "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/Progetto
 PATH_TO_DS_2_PREP = "/Users/mattiadargenio/Desktop/Unisa/Corsi/1:2/biometria/ProgettoEEG/BED_Biometric_EEG_dataset/BED/Features/Verification/"
 
 # Set the limit of users' data to populate the pandas dataframe. Choose values between 1 and 21
-_users_limit = 1
+_users_limit = 2
 # Set the limit of sessions to use for the pandas dataframe. Choose values between 1 and 3
 _session_limit = 3
 # Set True if you want to show logs
@@ -30,7 +30,7 @@ def load(path):
         current_user_measurement = []
 
         # A dictionary containing the indexes of record and the relative sessions
-        # For example: 100:1, 500:2, 580:3 means that the first 100 records are from the first session and so on
+        # For example: 1:100, 2:500, 3:580 means that the first 100 records are from the first session and so on
 
         sessions = dict()
 
@@ -48,13 +48,13 @@ def load(path):
             # Dropping "Counter" and "Interpolated"
             table = table[2:]
             # Gathering recordings
-            if i == 1:
-                current_user_measurement = table
+            if j == 1:
+                current_user_measurement = table.tolist()
             else:
-                for sensor_number in range(0,len(current_user_measurement)):
+                for sensor_number in range(0, len(current_user_measurement)):
                     current_user_measurement[sensor_number].extend(table[sensor_number])
 
-            # Saving session informations
+            # Saving session information
             sessions[j] = len(current_user_measurement[0])
 
         if _logging:
