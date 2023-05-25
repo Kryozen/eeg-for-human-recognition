@@ -1,5 +1,6 @@
 import loading
-import preprocessing as pr
+import preprocessing
+import classification
 
 if __name__ == '__main__':
     # Loading the measurements for different users
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     # Apply a butterworth bandpass filter
     new_users_measurements = []
     for user_measurements in users_measurements:
-        new_user_measurements = pr.bandpass_filter(user_measurements)
+        new_user_measurements = preprocessing.bandpass_filter(user_measurements)
         new_users_measurements.append(new_user_measurements)
 
     users_measurements = new_users_measurements
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     # ica_values = []
     # for user_measurements in users_measurements:
     #     n_components = 15
-    #     current_user_ica_values = pr.ica_processing(user_measurements, n_components)
+    #     current_user_ica_values = preprocessing.ica_processing(user_measurements, n_components)
     #     ica_values.append(current_user_ica_values)
     #
     # # Reduce the number of measurements
@@ -41,7 +42,7 @@ if __name__ == '__main__':
 
     pca_values = []
     for user_measurements in users_measurements:
-        current_user_pca_values = pr.pca_processing(user_measurements)
+        current_user_pca_values = preprocessing.pca_processing(user_measurements)
         pca_values.append(current_user_pca_values)
 
     # Reduce the number of measurements
@@ -55,7 +56,7 @@ if __name__ == '__main__':
 
     psd_values = []
     for user_measurements in users_measurements:
-        current_user_psd = pr.compute_spectral_features(user_measurements)
+        current_user_psd = preprocessing.compute_spectral_features(user_measurements)
         psd_values.append(current_user_psd)
 
     print("## INFO: Power Spectral Density computed successfully!")
@@ -67,15 +68,15 @@ if __name__ == '__main__':
 
     wavelet_values = []
     for user_measurements in users_measurements:
-        current_user_wavelet = pr.compute_wavelet_transform(user_measurements)
+        current_user_wavelet = preprocessing.compute_wavelet_transform(user_measurements)
         wavelet_values.append(current_user_wavelet)
 
     print("## INFO: Wavelet transform computed successfully!")
-    exit(0)
 
     # Starting Classification
     print("## INFO: starting classification...")
 
-    # @todo add LSTM
+    x_train, y_train, x_test, y_test = classification.train_test_split_random(users_measurements, perc_train=75)
+    model = classification.classification_by_lstm(x_train, y_train)
 
-    print("Accuracy: {}%".format(acc))
+    classification.prediction_by_lstm(model, x_test, y_test)
