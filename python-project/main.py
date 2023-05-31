@@ -52,26 +52,26 @@ if __name__ == '__main__':
 
     # Compute Power Spectral Density
 
-    print("## INFO: computing Power Spectral Density...")
-
-    psd_values = []
-    for user_measurements in users_measurements:
-        current_user_psd = preprocessing.compute_spectral_features(user_measurements)
-        psd_values.append(current_user_psd)
-
-    print("## INFO: Power Spectral Density computed successfully!")
-    # @todo add psd mean etc
-
-    # Compute Wavelet Transform
-
-    print("## INFO: computing Wavelet transform...")
-
-    wavelet_values = []
-    for user_measurements in users_measurements:
-        current_user_wavelet = preprocessing.compute_wavelet_transform(user_measurements)
-        wavelet_values.append(current_user_wavelet)
-
-    print("## INFO: Wavelet transform computed successfully!")
+    # print("## INFO: computing Power Spectral Density...")
+    #
+    # psd_values = []
+    # for user_measurements in users_measurements:
+    #     current_user_psd = preprocessing.compute_spectral_features(user_measurements)
+    #     psd_values.append(current_user_psd)
+    #
+    # print("## INFO: Power Spectral Density computed successfully!")
+    # # @todo add psd mean etc
+    #
+    # # Compute Wavelet Transform
+    #
+    # print("## INFO: computing Wavelet transform...")
+    #
+    # wavelet_values = []
+    # for user_measurements in users_measurements:
+    #     current_user_wavelet = preprocessing.compute_wavelet_transform(user_measurements)
+    #     wavelet_values.append(current_user_wavelet)
+    #
+    # print("## INFO: Wavelet transform computed successfully!")
 
     # Starting Classification
     print("## INFO: starting classification...")

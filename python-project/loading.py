@@ -1,5 +1,5 @@
 import scipy
-import numpy
+import numpy as np
 from measurement import Measurement
 
 
@@ -53,6 +53,11 @@ def load(path):
             else:
                 for sensor_number in range(0, len(current_user_measurement)):
                     current_user_measurement[sensor_number].extend(table[sensor_number])
+
+            # np_current_user_measurement = []
+            # for sensor_number in range(0, len(current_user_measurement)):
+            #     sensor_meas = current_user_measurement[sensor_number]
+            #     np_current_user_measurement = np_current_user_measurement.append(np.ndarray(sensor_meas))
 
             # Saving session information
             sessions[j] = len(current_user_measurement[0])

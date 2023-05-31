@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
@@ -15,7 +16,16 @@ def train_test_split_random(users_measurements, perc_train=70):
     :return:
     """
 
-    training_dataset_length = math.ceil(len(users_measurements) * perc_train/100)
+    # # Gather sessions
+    # new_users_measurements = []
+    #
+    # for i, user_measurement in enumerate(users_measurements):
+    #     meas_0 = user_measurement.values[0]
+    #
+    #     new_users_measurements[i] = Measurement(meas_0, user_measurement.subject_id, user_measurement.sessions)
+    #     print("## INFO: merged user {0} measurements...".format(i))
+    #
+    # users_measurements = new_users_measurements
 
     scaler = MinMaxScaler(feature_range=(0, 1))
 
@@ -30,18 +40,20 @@ def train_test_split_random(users_measurements, perc_train=70):
     train_data = []
     test_data = []
     for user_measurement in users_measurements:
+        training_dataset_length = math.ceil(len(user_measurement) * perc_train / 100)
         train_data.append((user_measurement.values[0:training_dataset_length], user_measurement.subject_id))
         test_data.append((user_measurement.values[training_dataset_length:], user_measurement.subject_id))
 
     # Splitting the data
-    x_train = []
-    y_train = []
-    for single_user in train_data:
-        x_train.extend(single_user[0].tolist())
+    x_train = train_data[0][0][0:13]
+    y_train = [train_data[0][1],]
+    for single_user in train_data[1:]:
+        single_user = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
+        np.concatenate((x_train, single_user[0]))
         y_train.append(single_user[1])
 
     # Convert to numpy arrays
-    x_train, y_train = np.array(x_train), np.array(y_train)
+    y_train = np.array(y_train)
 
     # Reshape the data into 3-D array
     # x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
@@ -92,32 +104,46 @@ def train_test_split_session(users_measurements, n_session_train = 2):
 def classification_by_lstm(x_train, y_train):
     # Initialising the RNN
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[0], 1)))
+    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
     model.add(Dropout(0.2))
 
-    # Convert numpy arrays into lists
-    x_train = x_train.tolist() if type(x_train) is np.ndarray else x_train
-    y_train = y_train.tolist() if type(y_train) is np.ndarray else y_train
+    print("## INFO: model created ({0}%)...".format(1/4 * 100))
 
     # Adding a second LSTM layer and Dropout layer
     model.add(LSTM(units=50, return_sequences=True))
     model.add(Dropout(0.2))
 
+    print("## INFO: added second layer ({0}%)...".format(2/4 * 100))
+
     # Adding a third LSTM layer and Dropout layer
     model.add(LSTM(units=50, return_sequences=True))
     model.add(Dropout(0.2))
 
+    print("## INFO: added third layer ({0}%)...".format(3/4 * 100))
+
     # Adding a fourth LSTM layer and Dropout layer
     model.add(LSTM(units=50))
     model.add(Dropout(0.2))
+
+    print("## INFO: added fourth layer ({0}%)...".format(4 / 4 * 100))
+
 
     # Adding the output layer
     # For Full connection layer we use dense
     # As the output is 1D - we use unit=1
     model.add(Dense(units=1))
 
+    print("## INFO: added output layer")
+
     # compile and fit the model on 30 epochs
     model.compile(optimizer='adam', loss='mean_squared_error')
+
+    # !!!ERRORE QUI!!!
+    new_x = []
+    for i in range(len(x_train)):
+        new_x.append(tf.convert_to_tensor(x_train[i]))
+    x_train = new_x
+
     model.fit(x_train, y_train, epochs=30, batch_size=50)
 
     return model
