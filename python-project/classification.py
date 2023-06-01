@@ -143,9 +143,13 @@ def classification_by_lstm(x_train, y_train):
 
     x_train = new_x
 
+    # Fitting tensorflow model
     print("## INFO: fitting model...")
-    print(len(x_train) == len(y_train))
-    model.fit(x_train, y_train, epochs=30, batch_size=50)
+
+    x_train = tf.stack(x_train)
+    y_train = tf.stack(y_train)
+
+    model.fit(x_train, y_train, epochs=30, batch_size=50, verbose=2)
 
     return model
 
