@@ -1,4 +1,6 @@
 import math
+from tqdm import tqdm
+
 import numpy as np
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
@@ -45,12 +47,16 @@ def train_test_split_random(users_measurements, perc_train=70):
         test_data.append((user_measurement.values[training_dataset_length:], user_measurement.subject_id))
 
     # Splitting the data
-    x_train = train_data[0][0][0:13]
-    y_train = [train_data[0][1],]
+    x_train = train_data[0][0]
+    y_train = []
+    for i in range(len(x_train)):
+        y_train.append(train_data[0][1])
+
     for single_user in train_data[1:]:
-        single_user = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
-        np.concatenate((x_train, single_user[0]))
-        y_train.append(single_user[1])
+        train_0 = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
+        x_train = np.concatenate((x_train, train_0[0]))
+        for i in range(len(train_0[0])):
+            y_train.append(single_user[1])
 
     # Convert to numpy arrays
     y_train = np.array(y_train)
@@ -71,7 +77,7 @@ def train_test_split_random(users_measurements, perc_train=70):
     # Reshape the data into 3-D array
     # x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
 
-    return x_train, x_test, y_train, y_test
+    return x_train, y_train, x_test, y_test
 
 
 def train_test_split_sequence(users_measurements, perc_train=70):
@@ -107,25 +113,17 @@ def classification_by_lstm(x_train, y_train):
     model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
     model.add(Dropout(0.2))
 
-    print("## INFO: model created ({0}%)...".format(1/4 * 100))
-
     # Adding a second LSTM layer and Dropout layer
     model.add(LSTM(units=50, return_sequences=True))
     model.add(Dropout(0.2))
-
-    print("## INFO: added second layer ({0}%)...".format(2/4 * 100))
 
     # Adding a third LSTM layer and Dropout layer
     model.add(LSTM(units=50, return_sequences=True))
     model.add(Dropout(0.2))
 
-    print("## INFO: added third layer ({0}%)...".format(3/4 * 100))
-
     # Adding a fourth LSTM layer and Dropout layer
     model.add(LSTM(units=50))
     model.add(Dropout(0.2))
-
-    print("## INFO: added fourth layer ({0}%)...".format(4 / 4 * 100))
 
 
     # Adding the output layer
@@ -133,17 +131,20 @@ def classification_by_lstm(x_train, y_train):
     # As the output is 1D - we use unit=1
     model.add(Dense(units=1))
 
-    print("## INFO: added output layer")
-
     # compile and fit the model on 30 epochs
     model.compile(optimizer='adam', loss='mean_squared_error')
 
-    # !!!ERRORE QUI!!!
+    # Convert numpy arrays to tensors
+    print("\n## INFO: converting to tensors")
     new_x = []
-    for i in range(len(x_train)):
-        new_x.append(tf.convert_to_tensor(x_train[i]))
+    for i in tqdm(range(len(x_train))):
+        tensor = tf.convert_to_tensor(x_train[i])
+        new_x.append(tensor)
+
     x_train = new_x
 
+    print("## INFO: fitting model...")
+    print(len(x_train) == len(y_train))
     model.fit(x_train, y_train, epochs=30, batch_size=50)
 
     return model
@@ -151,6 +152,7 @@ def classification_by_lstm(x_train, y_train):
 
 def prediction_by_lstm(model, x_test, y_test):
     # Check predicted values
+    print("## INFO: Starting prediction...")
     predictions = model.predict(x_test)
 
     # Undo scaling

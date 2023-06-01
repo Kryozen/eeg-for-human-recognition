@@ -77,6 +77,7 @@ if __name__ == '__main__':
     print("## INFO: starting classification...")
 
     x_train, y_train, x_test, y_test = classification.train_test_split_random(users_measurements, perc_train=75)
+
     model = classification.classification_by_lstm(x_train, y_train)
 
     classification.prediction_by_lstm(model, x_test, y_test)

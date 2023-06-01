@@ -1,5 +1,4 @@
 import scipy
-import numpy as np
 from measurement import Measurement
 
 
