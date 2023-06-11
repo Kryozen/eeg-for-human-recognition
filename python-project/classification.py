@@ -74,6 +74,24 @@ def train_test_split(users_measurements, perc_train=70):
     # Convert y_test to a numpy array
     y_test = np.array(y_test)
 
+    # Shuffling data
+
+    # Zip the arrays together to keep coherence
+    train_zip = list(zip(x_train, y_train))
+    test_zip = list(zip(x_test, y_test))
+
+    # Shuffle zipped lists
+    np.random.shuffle(train_zip)
+    np.random.shuffle(test_zip)
+
+    # Unzip lists
+    x_train, y_train = zip(*train_zip)
+    x_test, y_test = zip(*test_zip)
+
+    # Convert back to numpy arrays
+    x_train, y_train, x_test, y_test = np.array(x_train), np.array(y_train), np.array(x_test), np.array(y_test)
+
+
     return x_train, y_train, x_test, y_test
 
 
@@ -127,7 +145,7 @@ def prediction_by_random_forest(model, x_test, y_test):
         if y_test[index] == predictions_0[index]:
             correct_predictions += 1
 
-    accuracy = correct_predictions * 100 / len(y_test)
+    accuracy = np.round(correct_predictions * 100 / len(y_test),2)
 
     print("Accuracy: {0}%".format(accuracy))
 
