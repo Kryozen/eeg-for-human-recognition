@@ -3,12 +3,13 @@ from tqdm import tqdm
 
 import numpy as np
 import tensorflow as tf
+import tensorflow_decision_forests as tfdf
+
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 
-
-def train_test_split_random(users_measurements, perc_train=70):
+def train_test_split(users_measurements, perc_train=70):
     """
 
     :param users_measurements:
@@ -17,18 +18,6 @@ def train_test_split_random(users_measurements, perc_train=70):
     :param rand_state:
     :return:
     """
-
-    # # Gather sessions
-    # new_users_measurements = []
-    #
-    # for i, user_measurement in enumerate(users_measurements):
-    #     meas_0 = user_measurement.values[0]
-    #
-    #     new_users_measurements[i] = Measurement(meas_0, user_measurement.subject_id, user_measurement.sessions)
-    #     print("## INFO: merged user {0} measurements...".format(i))
-    #
-    # users_measurements = new_users_measurements
-
     scaler = MinMaxScaler(feature_range=(0, 1))
 
     # Scale all the data to be values between 0 and 1
@@ -82,7 +71,7 @@ def train_test_split_random(users_measurements, perc_train=70):
         for _ in range(len(test_0[0])):
             y_test.append(single_user[1])
 
-    # Convert x_test to a numpy array
+    # Convert y_test to a numpy array
     y_test = np.array(y_test)
 
     return x_train, y_train, x_test, y_test
@@ -114,6 +103,33 @@ def train_test_split_session(users_measurements, n_session_train = 2):
         # Append the slice of measurements to the train_set
         # @todo train_set.append(user_measurement) ADD SLICE BUILT-IN FUNC TO MEASUREMENT CLASS
 
+def classification_by_random_forest(x_train, y_train):
+    model = tfdf.keras.RandomForestModel()
+    model.fit(x_train, y_train, verbose=1)
+
+    return model
+
+def prediction_by_random_forest(model, x_test, y_test):
+    # Make predictions
+    print("\n## INFO: starting predictions")
+    predictions = model.predict(x_test, verbose=1)
+
+    predictions = np.round(predictions)
+
+    predictions_0 = []
+    # Calculate accuracy
+    for i, val in enumerate(predictions):
+        val = np.argmax(val)
+        predictions_0.append(val)
+
+    correct_predictions = 0
+    for index in range(len(y_test)):
+        if y_test[index] == predictions_0[index]:
+            correct_predictions += 1
+
+    accuracy = correct_predictions * 100 / len(y_test)
+
+    print("Accuracy: {0}%".format(accuracy))
 
 def classification_by_lstm(x_train, y_train):
     # Initialising the RNN
@@ -135,8 +151,8 @@ def classification_by_lstm(x_train, y_train):
 
 
     # Adding the output layer
-    # For Full connection layer we use dense
-    # As the output is 1D - we use unit=1
+    # For full connection layer we use dense
+    # Since the output is 1D - we use unit=1
     model.add(Dense(units=1))
 
     # compile and fit the model on 30 epochs
