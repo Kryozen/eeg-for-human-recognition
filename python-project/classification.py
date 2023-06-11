@@ -43,39 +43,47 @@ def train_test_split_random(users_measurements, perc_train=70):
     test_data = []
     for user_measurement in users_measurements:
         training_dataset_length = math.ceil(len(user_measurement) * perc_train / 100)
-        train_data.append((user_measurement.values[0:training_dataset_length], user_measurement.subject_id))
-        test_data.append((user_measurement.values[training_dataset_length:], user_measurement.subject_id))
+
+        train_data_0 = user_measurement.values[0:training_dataset_length]
+        train_data.append((train_data_0, user_measurement.subject_id))
+
+        test_data_0 = user_measurement.values[training_dataset_length:]
+        test_data.append((test_data_0, user_measurement.subject_id))
 
     # Splitting the data
+
+    # Creating test data and labels
+
     x_train = train_data[0][0]
     y_train = []
-    for i in range(len(x_train)):
+    for _ in range(len(x_train)):
         y_train.append(train_data[0][1])
 
     for single_user in train_data[1:]:
         train_0 = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
         x_train = np.concatenate((x_train, train_0[0]))
-        for i in range(len(train_0[0])):
+        for _ in range(len(train_0[0])):
             y_train.append(single_user[1])
 
     # Convert to numpy arrays
     y_train = np.array(y_train)
 
-    # Reshape the data into 3-D array
-    # x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    # Creating test data and lables
 
-    # splitting the x_test and y_test data sets
-    x_test = []
+    x_test = test_data[0][0]
     y_test = []
-    for single_user in test_data:
-        x_test.extend(single_user[0])
-        y_test.append(single_user[1])
+
+    for _ in range(len(x_test)):
+        y_test.append(test_data[0][1])
+
+    for single_user in test_data[1:]:
+        test_0 = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
+        x_test = np.concatenate((x_test, test_0[0]))
+        for _ in range(len(test_0[0])):
+            y_test.append(single_user[1])
 
     # Convert x_test to a numpy array
-    x_test = np.array(x_test)
-
-    # Reshape the data into 3-D array
-    # x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    y_test = np.array(y_test)
 
     return x_train, y_train, x_test, y_test
 
@@ -149,12 +157,21 @@ def classification_by_lstm(x_train, y_train):
     x_train = tf.stack(x_train)
     y_train = tf.stack(y_train)
 
-    model.fit(x_train, y_train, epochs=30, batch_size=50, verbose=2)
+    model.fit(x_train, y_train, epochs=30, batch_size=150, verbose=1)
 
     return model
 
 
 def prediction_by_lstm(model, x_test, y_test):
+    # Convert numpy arrays to tensors
+    print("\n## INFO: converting to tensors")
+    new_x = []
+    for i in tqdm(range(len(x_test))):
+        tensor = tf.convert_to_tensor(x_test[i])
+        new_x.append(tensor)
+
+    x_test = new_x
+
     # Check predicted values
     print("## INFO: Starting prediction...")
     predictions = model.predict(x_test)

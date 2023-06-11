@@ -46,6 +46,7 @@ def load(path):
             table = table.T
             # Dropping "Counter" and "Interpolated"
             table = table[2:]
+
             # Gathering recordings
             if j == 1:
                 current_user_measurement = table.tolist()
