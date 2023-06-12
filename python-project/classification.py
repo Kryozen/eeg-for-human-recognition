@@ -281,9 +281,9 @@ def compute_metrics(confusion_matrix):
             elif p != cl and c != cl:
                 tn += v
 
-        acc = np.round((tp + tn) / (tp + tn + fp + fn), 2)
-        pr = np.round(tp / (tp + fp), 2)
-        recall = np.round(tp / (tp + fn), 2)
+        acc = np.round(((tp + tn) / (tp + tn + fp + fn)) * 100, 2)
+        pr = np.round((tp / (tp + fp)) * 100, 2)
+        recall = np.round((tp / (tp + fn)) * 100, 2)
         fscore = np.round((2 * recall * pr) / (recall + pr), 2)
 
         metrics[cl] = (acc, pr, recall, fscore)
