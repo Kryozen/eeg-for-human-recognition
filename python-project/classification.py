@@ -11,12 +11,10 @@ from keras.layers import Dense, LSTM, Dropout
 
 def train_test_split(users_measurements, perc_train=70):
     """
-
-    :param users_measurements:
-    :param users_names:
-    :param perc_train:
-    :param rand_state:
-    :return:
+    Splits the set of data into data for training and data for testing.
+    :param users_measurements: the list of users measurements. Each i-th element of the list must be a list of measurements for the i-th user
+    :param perc_train: the percentage of dataset used for training (1 - perc_train/100 will be used for testing)
+    :return: x_train, y_train, x_test, y_test as follows: x is for data, y for labels.
     """
     scaler = MinMaxScaler(feature_range=(0, 1))
 
@@ -113,21 +111,25 @@ def train_test_split_session(users_measurements, n_session_train = 2):
     :return: an array-like object of Measurement objects for training and an array-like object for testing
     """
 
-    train_set, test_set = [], []
-    for user_measurement in users_measurements:
-        # The first n_measurements records will be used for training
-        n_measurements = user_measurement.sessions[n_session_train]
-
-        # Append the slice of measurements to the train_set
-        # @todo train_set.append(user_measurement) ADD SLICE BUILT-IN FUNC TO MEASUREMENT CLASS
-
 def classification_by_random_forest(x_train, y_train):
+    """
+    Trains a model using the random forest algorithm.
+    :param x_train: the measurements for the training
+    :param y_train: the labels for the training
+    :return: the trained model
+    """
     model = tfdf.keras.RandomForestModel()
     model.fit(x_train, y_train, verbose=1)
 
     return model
 
 def prediction_by_random_forest(model, x_test):
+    """
+        Makes predictions given a model trained with a random forest algorithm
+        :param model: the pre-trained model
+        :param x_test: the measurements of the test portion of the dataset
+        :return: the predictions
+        """
     # Make predictions
     print("\n## INFO: starting predictions")
     predictions = model.predict(x_test, verbose=1)
@@ -144,6 +146,12 @@ def prediction_by_random_forest(model, x_test):
 
 
 def classification_by_lstm(x_train, y_train):
+    """
+    Trains a model using the LSTM algorithm.
+    :param x_train: the measurements for the training
+    :param y_train: the labels for the training
+    :return: the trained model
+    """
     # Initialising the RNN
     model = Sequential()
     model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
@@ -191,6 +199,12 @@ def classification_by_lstm(x_train, y_train):
 
 
 def prediction_by_lstm(model, x_test):
+    """
+    Makes predictions given a model trained with a lstm algorithm
+    :param model: the pre-trained model
+    :param x_test: the measurements of the test portion of the dataset
+    :return: the predictions
+    """
     # Convert numpy arrays to tensors
     print("\n## INFO: converting to tensors")
     new_x = []
@@ -212,10 +226,10 @@ def prediction_by_lstm(model, x_test):
 
 def compute_confusion_matrix(predictions, correct_labels):
     """
-
-    :param predictions:
-    :param correct_labels:
-    :return:
+    Computes the confusion matrix given the predictions and the correct labels
+    :param predictions: the predictions of a model
+    :param correct_labels: the expected predictions
+    :return: a dictionary containing keys as couples (p, c) i.e. predicted class and correct class, and values as the counters of each instance of (p, c)
     """
 
     # Create a dictionary for which the key is the tuple (p, c) where p is the predicted value and c is the correct label and the value
@@ -227,18 +241,20 @@ def compute_confusion_matrix(predictions, correct_labels):
         p = predictions[i]
         c = correct_labels[i]
 
-        if not (p,c) in confusion_matrix.keys():
-            confusion_matrix[(p,c)] = 0
+        key = (p, c)
+
+        if not key in confusion_matrix.keys():
+            confusion_matrix[key] = 0
         else:
-            confusion_matrix[(p,c)]+= 1
+            confusion_matrix[key] += 1
 
     return confusion_matrix
 
 def compute_metrics(confusion_matrix):
     """
-
-    :param confusion_matrix:
-    :return:
+    Calculates accuracy, precision, recall and fscore for each class of the confusion matrix.
+    :param confusion_matrix: the confusio matrix previously computed
+    :return: a dictionary of key, values where keys are the classes and values are tuples like (accuracy, precision, recall, f-score)
     """
 
     # Identify all the classes
@@ -252,7 +268,7 @@ def compute_metrics(confusion_matrix):
 
     for cl in classes:
         # For each class we are computing TP, TN, FP, FN
-        tp, tn, fp, fn = 0
+        tp = tn = fp = fn = 0
         for k, v in confusion_matrix:
             p, c = k
 
@@ -265,11 +281,11 @@ def compute_metrics(confusion_matrix):
             elif p != cl and c != cl:
                 tn += v
 
-        acc = (tp + tn) / (tp + tn + fp + fn)
-        pr = tp / (tp + fp)
-        recall = tp / (tp + fn)
-        fscore = (2 * recall * pr) / (recall + pr)
+        acc = np.round((tp + tn) / (tp + tn + fp + fn), 2)
+        pr = np.round(tp / (tp + fp), 2)
+        recall = np.round(tp / (tp + fn), 2)
+        fscore = np.round((2 * recall * pr) / (recall + pr), 2)
 
-        d[cl] = (acc, pr, recall, fscore)
+        metrics[cl] = (acc, pr, recall, fscore)
 
     return metrics
