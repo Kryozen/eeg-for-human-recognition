@@ -238,8 +238,8 @@ def compute_confusion_matrix(predictions, correct_labels):
     confusion_matrix = dict()
 
     for i in range(len(predictions)):
-        p = predictions[i]
-        c = correct_labels[i]
+        p = predictions[i].item()
+        c = correct_labels[i].item()
 
         key = (p, c)
 
@@ -253,13 +253,13 @@ def compute_confusion_matrix(predictions, correct_labels):
 def compute_metrics(confusion_matrix):
     """
     Calculates accuracy, precision, recall and fscore for each class of the confusion matrix.
-    :param confusion_matrix: the confusio matrix previously computed
+    :param confusion_matrix: the confusion matrix previously computed
     :return: a dictionary of key, values where keys are the classes and values are tuples like (accuracy, precision, recall, f-score)
     """
 
     # Identify all the classes
     classes = set()
-    for k, _ in confusion_matrix:
+    for k in confusion_matrix.keys():
         _, c = k
         classes.add(c)
 
@@ -269,8 +269,9 @@ def compute_metrics(confusion_matrix):
     for cl in classes:
         # For each class we are computing TP, TN, FP, FN
         tp = tn = fp = fn = 0
-        for k, v in confusion_matrix:
+        for k in confusion_matrix.keys():
             p, c = k
+            v = confusion_matrix[k]
 
             if p == c:
                 tp += v
