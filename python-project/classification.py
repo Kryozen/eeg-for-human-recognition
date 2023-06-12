@@ -269,9 +269,8 @@ def compute_metrics(confusion_matrix):
     for cl in classes:
         # For each class we are computing TP, TN, FP, FN
         tp = tn = fp = fn = 0
-        for k in confusion_matrix.keys():
+        for k, v in confusion_matrix.items():
             p, c = k
-            v = confusion_matrix[k]
 
             if p == c:
                 tp += v
