@@ -13,3 +13,4 @@ pip install scikit-learn
 # Install keras
 pip install tensorflow
 pip install keras
+pip install tensorflow_decision_forests

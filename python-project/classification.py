@@ -127,7 +127,7 @@ def classification_by_random_forest(x_train, y_train):
 
     return model
 
-def prediction_by_random_forest(model, x_test, y_test):
+def prediction_by_random_forest(model, x_test):
     # Make predictions
     print("\n## INFO: starting predictions")
     predictions = model.predict(x_test, verbose=1)
@@ -140,14 +140,8 @@ def prediction_by_random_forest(model, x_test, y_test):
         val = np.argmax(val)
         predictions_0.append(val)
 
-    correct_predictions = 0
-    for index in range(len(y_test)):
-        if y_test[index] == predictions_0[index]:
-            correct_predictions += 1
+    return predictions_0
 
-    accuracy = np.round(correct_predictions * 100 / len(y_test),2)
-
-    print("Accuracy: {0}%".format(accuracy))
 
 def classification_by_lstm(x_train, y_train):
     # Initialising the RNN
@@ -196,7 +190,7 @@ def classification_by_lstm(x_train, y_train):
     return model
 
 
-def prediction_by_lstm(model, x_test, y_test):
+def prediction_by_lstm(model, x_test):
     # Convert numpy arrays to tensors
     print("\n## INFO: converting to tensors")
     new_x = []
@@ -214,6 +208,68 @@ def prediction_by_lstm(model, x_test, y_test):
     scaler = MinMaxScaler(feature_range=(0, 1))
     predictions = scaler.inverse_transform(predictions)
 
-    # Calculate RMSE score
-    rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
-    print("Accuracy: {}%".format(rmse))
+    return predictions
+
+def compute_confusion_matrix(predictions, correct_labels):
+    """
+
+    :param predictions:
+    :param correct_labels:
+    :return:
+    """
+
+    # Create a dictionary for which the key is the tuple (p, c) where p is the predicted value and c is the correct label and the value
+    # is the number of times the model predicted p and the expected prediction was c.
+    # If p == c then the model predicted the correct value.
+    confusion_matrix = dict()
+
+    for i in range(len(predictions)):
+        p = predictions[i]
+        c = correct_labels[i]
+
+        if not (p,c) in confusion_matrix.keys():
+            confusion_matrix[(p,c)] = 0
+        else:
+            confusion_matrix[(p,c)]+= 1
+
+    return confusion_matrix
+
+def compute_metrics(confusion_matrix):
+    """
+
+    :param confusion_matrix:
+    :return:
+    """
+
+    # Identify all the classes
+    classes = set()
+    for k, _ in confusion_matrix:
+        _, c = k
+        classes.add(c)
+
+    # Create a dictionary in which keys are the classes and values are (Accuracy, Precision, Recall, F-Score)
+    metrics = dict()
+
+    for cl in classes:
+        # For each class we are computing TP, TN, FP, FN
+        tp, tn, fp, fn = 0
+        for k, v in confusion_matrix:
+            p, c = k
+
+            if p == c:
+                tp += v
+            elif p == cl and c != cl:
+                fp += v
+            elif p != cl and c == cl:
+                fn += v
+            elif p != cl and c != cl:
+                tn += v
+
+        acc = (tp + tn) / (tp + tn + fp + fn)
+        pr = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        fscore = (2 * recall * pr) / (recall + pr)
+
+        d[cl] = (acc, pr, recall, fscore)
+
+    return metrics

@@ -76,7 +76,22 @@ if __name__ == '__main__':
     # Starting Classification
     print("## INFO: starting classification...")
 
+    # Split data in train and test
     x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70)
+
+    # Compute a model for machine learning
     model = classification.classification_by_random_forest(x_train, y_train)
 
-    classification.prediction_by_random_forest(model, x_test, y_test)
+    # Make predictions using the computed model
+    predictions = classification.prediction_by_random_forest(model, x_test)
+
+    # Compute the confusion matrix based on the predictions
+    confusion_matrix = classification.compute_confusion_matrix(predictions, y_test)
+
+    # Compute the metrics
+    metrics = classification.compute_metrics(confusion_matrix)
+
+    # Print output
+    for k, v in metrics:
+        print(" =====\n Class {0}\n=====".format(k))
+        print("Accuracy: {0}\nPrecision: {1}\nRecall: {2}\nF-Score: {3}".format(*[metric for metric in v]))
