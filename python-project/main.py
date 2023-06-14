@@ -5,7 +5,6 @@ import classification
 if __name__ == '__main__':
     # Loading the measurements for different users
     users_measurements = loading.load(loading.PATH_TO_DS_1)
-    # matplotlib.use('TkAgg')    # Uncomment if you want to set the display controller for matplotlib
 
     print("## INFO: starting preprocessing...")
 
@@ -20,21 +19,6 @@ if __name__ == '__main__':
     users_measurements = new_users_measurements
 
     print("## INFO: butterworth bandpass filter applied successfully!")
-
-    # Apply independent component analysis to reduce the complexity of the signal
-
-    # print("## INFO: applying Independent Component Analysis...")
-    #
-    # ica_values = []
-    # for user_measurements in users_measurements:
-    #     n_components = 15
-    #     current_user_ica_values = preprocessing.ica_processing(user_measurements, n_components)
-    #     ica_values.append(current_user_ica_values)
-    #
-    # # Reduce the number of measurements
-    # users_measurements = ica_values
-
-    # print("## INFO: Independent Component Analysis applied successfully!")
 
     # Apply principal component analysis to reduce the complexity of the signal
 
