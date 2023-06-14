@@ -9,6 +9,8 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 
+from sklearn.model_selection import RandomizedSearchCV
+
 def train_test_split(users_measurements, perc_train=70):
     """
     Splits the set of data into data for training and data for testing.
@@ -46,8 +48,6 @@ def train_test_split(users_measurements, perc_train=70):
         # Get the testing portion
         test_data_0 = data_set[training_dataset_length:]
         test_data.append((test_data_0, user_measurement.subject_id))
-
-
 
     # Creating a list of measurements (x_train) and a list of labels (y_train) for training data
     x_train = train_data[0][0]
@@ -123,15 +123,36 @@ def train_test_split_session(users_measurements, n_session_train = 2):
     :return: an array-like object of Measurement objects for training and an array-like object for testing
     """
 
-def classification_by_random_forest(x_train, y_train):
+def classification_by_random_forest(x_train, y_train, grid_search = False):
     """
     Trains a model using the random forest algorithm.
     :param x_train: the measurements for the training
     :param y_train: the labels for the training
     :return: the trained model
     """
-    model = tfdf.keras.RandomForestModel()
-    model.fit(x_train, y_train, verbose=1)
+    model = None
+    if grid_search:
+        # Create a tuner
+        tuner = tfdf.tuner.RandomSearch(num_trials=10)
+
+        # Number of trees in random forest
+        n_estimators = [int(x) for x in np.linspace(start=200, stop=500, num=10)]
+        # Maximum number of levels in tree
+        max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
+        # Method of selecting samples for training each tree
+        bootstrap = [True, False]
+
+        # Tune the random search
+        tuner.choice("num_trees", n_estimators)
+        tuner.choice("max_depth", max_depth)
+        tuner.choice("bootstrap_training_dataset", bootstrap)
+
+        # Create a tuned model
+        model = tfdf.keras.RandomForestModel(tuner=tuner)  # Fit the random search model
+        model.fit(x_train, y_train)
+    else:
+        model = tfdf.keras.RandomForestModel()
+        model.fit(x_train, y_train, verbose=1)
 
     return model
 

@@ -34,29 +34,6 @@ if __name__ == '__main__':
 
     print("## INFO: Principal Component Analysis applied successfully!")
 
-    # Compute Power Spectral Density
-
-    # print("## INFO: computing Power Spectral Density...")
-    #
-    # psd_values = []
-    # for user_measurements in users_measurements:
-    #     current_user_psd = preprocessing.compute_spectral_features(user_measurements)
-    #     psd_values.append(current_user_psd)
-    #
-    # print("## INFO: Power Spectral Density computed successfully!")
-    # # @todo add psd mean etc
-    #
-    # # Compute Wavelet Transform
-    #
-    # print("## INFO: computing Wavelet transform...")
-    #
-    # wavelet_values = []
-    # for user_measurements in users_measurements:
-    #     current_user_wavelet = preprocessing.compute_wavelet_transform(user_measurements)
-    #     wavelet_values.append(current_user_wavelet)
-    #
-    # print("## INFO: Wavelet transform computed successfully!")
-
     # Starting Classification
     print("## INFO: starting classification...")
 
@@ -64,7 +41,7 @@ if __name__ == '__main__':
     x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70)
 
     # Compute a model for machine learning
-    model = classification.classification_by_random_forest(x_train, y_train)
+    model = classification.classification_by_random_forest(x_train, y_train, grid_search=True)
 
     # Make predictions using the computed model
     predictions = classification.prediction_by_random_forest(model, x_test)
