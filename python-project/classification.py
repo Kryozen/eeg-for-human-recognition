@@ -4,6 +4,7 @@ from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 import tensorflow_decision_forests as tfdf
+import xgboost as xgb
 
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
@@ -170,12 +171,49 @@ def prediction_by_random_forest(model, x_test):
     predictions = np.round(predictions)
 
     predictions_0 = []
-    # Calculate accuracy
-    for i, val in enumerate(predictions):
+
+    # Adjust values
+    for val in predictions:
         val = np.argmax(val)
         predictions_0.append(val)
 
     return predictions_0
+
+def classification_by_xgboost(x_train, y_train):
+    """
+
+    :param x_train:
+    :param y_train:
+    :return:
+    """
+    # Hyperparameters
+    params = {"objective": "reg:squarederror", "tree_method": "gpu_hist"}
+
+    # Create a DMatrix based on x_train
+    d_train = xgb.DMatrix(x_train, y_train, enable_categorical=True)
+
+    # Create the XGBoost trained model
+    model = xgb.train(params, d_train)
+
+    return model
+
+def prediction_by_xgboost(model, x_test, y_test):
+    """
+
+    :param model:
+    :param x_test:
+    :return:
+    """
+    # Create a DMatrix based on x_train
+    d_test = xgb.DMatrix(x_test, y_test, enable_categorical=True)
+
+    # Make predictions
+    predictions = model.predict(d_test)
+
+    # Fix predicted values
+    predictions = np.round(predictions)
+
+    return predictions
 
 
 def classification_by_lstm(x_train, y_train):
@@ -304,7 +342,6 @@ def compute_metrics(confusion_matrix):
         tp = tn = fp = fn = 0
         for k, v in confusion_matrix.items():
             p, c = k
-
             if p == c:
                 tp += v
             elif p == cl and c != cl:
@@ -314,10 +351,13 @@ def compute_metrics(confusion_matrix):
             elif p != cl and c != cl:
                 tn += v
 
-        acc = ((tp + tn) / (tp + tn + fp + fn)) * 100
-        pr = (tp / (tp + fp)) * 100
-        recall = (tp / (tp + fn)) * 100
-        fscore = (2 * recall * pr) / (recall + pr) / 100
+        if tp == tp == fp == fn == 0:
+            acc = pr = recall = fscore = 0
+        else:
+            acc = ((tp + tn) / (tp + tn + fp + fn)) * 100
+            pr = (tp / (tp + fp)) * 100
+            recall = (tp / (tp + fn)) * 100
+            fscore = (2 * recall * pr) / (recall + pr) / 100
 
         metrics[cl] = (acc, pr, recall, fscore)
 

@@ -41,10 +41,10 @@ if __name__ == '__main__':
     x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70)
 
     # Compute a model for machine learning
-    model = classification.classification_by_random_forest(x_train, y_train, grid_search=True)
+    model = classification.classification_by_xgboost(x_train, y_train)
 
     # Make predictions using the computed model
-    predictions = classification.prediction_by_random_forest(model, x_test)
+    predictions = classification.prediction_by_xgboost(model, x_test, y_test)
 
     # Compute the confusion matrix based on the predictions
     confusion_matrix = classification.compute_confusion_matrix(predictions, y_test)
