@@ -77,5 +77,5 @@ if __name__ == '__main__':
 
     # Print output
     for k, v in metrics.items():
-        print(" =====\n Class {0}\n=====".format(k))
-        print("Accuracy: {0}\nPrecision: {1}\nRecall: {2}\nF-Score: {3}".format(*[metric for metric in v]))
+        print("=====\n\tUser ID: {0}\n=====".format(k))
+        print("Accuracy: {0}%\nPrecision: {1}%\nRecall: {2}%\nF-Score: {3}".format(*[metric for metric in v]))

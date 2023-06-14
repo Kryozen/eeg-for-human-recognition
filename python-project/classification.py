@@ -16,6 +16,7 @@ def train_test_split(users_measurements, perc_train=70):
     :param perc_train: the percentage of dataset used for training (1 - perc_train/100 will be used for testing)
     :return: x_train, y_train, x_test, y_test as follows: x is for data, y for labels.
     """
+    # Create an instance of a scaler
     scaler = MinMaxScaler(feature_range=(0, 1))
 
     # Scale all the data to be values between 0 and 1
@@ -23,43 +24,55 @@ def train_test_split(users_measurements, perc_train=70):
         new_values = scaler.fit_transform(user_measurement.values)
         user_measurement.values = new_values
 
-    # Train data and test data are lists of tuples.
-    # The first element of the tuple is the numpy array containing the measurements
-    # The second element of the tuple is the id of the subject
+    # Creating lists of tuples (m, i) where m is a numpy array and i is the id of the subject (source of measurements).
     train_data = []
     test_data = []
+
+    # For each subject split into train and test
     for user_measurement in users_measurements:
+        # Calculate the number of measurements to use for training
         training_dataset_length = math.ceil(len(user_measurement) * perc_train / 100)
 
-        train_data_0 = user_measurement.values[0:training_dataset_length]
+        # Get the measurement values
+        data_set = user_measurement.values
+
+        # Shuffle the measurement values
+        np.random.shuffle(data_set)
+
+        # Get the training portion
+        train_data_0 = data_set[0:training_dataset_length]
         train_data.append((train_data_0, user_measurement.subject_id))
 
-        test_data_0 = user_measurement.values[training_dataset_length:]
+        # Get the testing portion
+        test_data_0 = data_set[training_dataset_length:]
         test_data.append((test_data_0, user_measurement.subject_id))
 
-    # Splitting the data
 
-    # Creating test data and labels
 
+    # Creating a list of measurements (x_train) and a list of labels (y_train) for training data
     x_train = train_data[0][0]
     y_train = []
+
+    # Appending one label for each measurement of the first session
     for _ in range(len(x_train)):
         y_train.append(train_data[0][1])
 
+    # Appending the other two sessions
     for single_user in train_data[1:]:
         train_0 = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
         x_train = np.concatenate((x_train, train_0[0]))
+        # Appending one label for each measurement
         for _ in range(len(train_0[0])):
             y_train.append(single_user[1])
 
-    # Convert to numpy arrays
+    # Convert to numpy array
     y_train = np.array(y_train)
 
-    # Creating test data and lables
-
+    # Creating a list of measurements (x_test) and a list of labels (y_test) for test data
     x_test = test_data[0][0]
     y_test = []
 
+    # Appending one label for each measurement of the first session
     for _ in range(len(x_test)):
         y_test.append(test_data[0][1])
 
@@ -74,21 +87,20 @@ def train_test_split(users_measurements, perc_train=70):
 
     # Shuffling data
 
-    # Zip the arrays together to keep coherence
+    ## Zip the arrays together to keep coherence
     train_zip = list(zip(x_train, y_train))
     test_zip = list(zip(x_test, y_test))
 
-    # Shuffle zipped lists
+    ## Shuffle zipped lists
     np.random.shuffle(train_zip)
     np.random.shuffle(test_zip)
 
-    # Unzip lists
+    ## Unzip lists
     x_train, y_train = zip(*train_zip)
     x_test, y_test = zip(*test_zip)
 
-    # Convert back to numpy arrays
+    ## Convert back to numpy arrays
     x_train, y_train, x_test, y_test = np.array(x_train), np.array(y_train), np.array(x_test), np.array(y_test)
-
 
     return x_train, y_train, x_test, y_test
 
@@ -281,10 +293,10 @@ def compute_metrics(confusion_matrix):
             elif p != cl and c != cl:
                 tn += v
 
-        acc = np.round(((tp + tn) / (tp + tn + fp + fn)) * 100, 2)
-        pr = np.round((tp / (tp + fp)) * 100, 2)
-        recall = np.round((tp / (tp + fn)) * 100, 2)
-        fscore = np.round((2 * recall * pr) / (recall + pr), 2)
+        acc = ((tp + tn) / (tp + tn + fp + fn)) * 100
+        pr = (tp / (tp + fp)) * 100
+        recall = (tp / (tp + fn)) * 100
+        fscore = (2 * recall * pr) / (recall + pr) / 100
 
         metrics[cl] = (acc, pr, recall, fscore)
 
