@@ -1,9 +1,6 @@
 # Install numpy
 pip install numpy
 
-# Install pandas
-pip install pandas
-
 # Install scipy
 pip install scipy
 
@@ -13,3 +10,4 @@ pip install scikit-learn
 # Install keras
 pip install tensorflow
 pip install keras
+pip install tensorflow_decision_forests

@@ -12,11 +12,13 @@ def bandpass_filter(measurement, low_value=0.5, high_value=50, sampling_frequenc
     :param measurement: the Measurement object containing each measurement
     :param low_value: the lowest bound
     :param high_value: the highest bound
+    :param sampling_frequency:
+    :param order:
     :return: the filtered dataframe
     """
     # Get values
     values = measurement.values
-    # Create a new DataFrame for containing the filtered values
+    # Create a new list for containing the filtered values
     filtered = []
 
     # Do not apply the filter on the following columns
