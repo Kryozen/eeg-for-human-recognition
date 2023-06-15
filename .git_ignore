@@ -1,0 +1,3 @@
+# file: .git_ignore
+.DS_Store
+.idea
