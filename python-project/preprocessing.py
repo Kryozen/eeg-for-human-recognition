@@ -53,7 +53,7 @@ def bandpass_filter(measurement, low_value=0.5, high_value=50, sampling_frequenc
         # Apply the filter
         filtered.append(signal.filtfilt(num, den, values[i]).tolist())
 
-    return Measurement(filtered, measurement.subject_id)
+    return Measurement(filtered, measurement.subject_id, measurement.sessions)
 
 def ica_processing(measurement, n_components=None):
     """
@@ -69,7 +69,7 @@ def ica_processing(measurement, n_components=None):
     # Apply the ICA to the Measurement object values
     ica_values = ica.fit_transform(numpy.transpose(measurement.values))
 
-    return Measurement(ica_values, measurement.subject_id)
+    return Measurement(ica_values, measurement.subject_id, measurement.sessions)
 
 
 def pca_processing(measurement):
@@ -84,7 +84,7 @@ def pca_processing(measurement):
     # Apply the ICA to the Measurement object values
     pca_values = pca.fit_transform(numpy.transpose(measurement.values))
 
-    return Measurement(pca_values, measurement.subject_id)
+    return Measurement(pca_values, measurement.subject_id, measurement.sessions)
 
 
 def compute_spectral_features(measurement):

@@ -4,7 +4,7 @@ import classification
 
 if __name__ == '__main__':
     # Loading the measurements for different users
-    users_measurements = loading.load(loading.PATH_TO_DS_2)
+    users_measurements = loading.load(loading.PATH_TO_DS_1)
 
     print("## INFO: starting preprocessing...")
 
@@ -37,14 +37,17 @@ if __name__ == '__main__':
     # Starting Classification
     print("## INFO: starting classification...")
 
+    """ TEST TEST TEST"""
+    x_train, y_train, x_test, y_test = classification.train_test_split_session(users_measurements, 2)
+
     # Split data in train and test
-    x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70)
+    # x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70)
 
     # Compute a model for machine learning
-    model = classification.classification_by_randomfgridsearch(x_train, y_train)
+    model = classification.classification_by_random_forest(x_train, y_train)
 
     # Make predictions using the computed model
-    predictions = classification.prediction_by_randomfgridsearch(model, x_test)
+    predictions = classification.prediction_by_random_forest(model, x_test)
 
     # Compute the confusion matrix based on the predictions
     confusion_matrix = classification.compute_confusion_matrix(predictions, y_test)

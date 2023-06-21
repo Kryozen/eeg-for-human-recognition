@@ -1,22 +1,31 @@
 # Import module math for general purpose
 import math
+
 # Import module tqdm for progress bar utility
 from sklearn.ensemble import RandomForestClassifier
+
 # Import module numpy for general purpose
 from tqdm import tqdm
+
 # Import module numpy for general purpose
 import numpy as np
+
 # Import module tensorflow for machine learning and deep learning algorithms
 import tensorflow as tf
+
 # Import module tensorflow decision forests for Random Forest algorithm
 import tensorflow_decision_forests as tfdf
+
 # Import module xgboost for better performing algorithms
 import xgboost as xgb
+
 # Import module scikit-learn for scaling data
 from sklearn.preprocessing import MinMaxScaler
+
 # Import module keras for LSTM algorithm
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
+
 # Import module scikit-learn for grid search
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 
@@ -121,16 +130,6 @@ def train_test_split(users_measurements, perc_train=70):
     return x_train, y_train, x_test, y_test
 
 
-def train_test_split_sequence(users_measurements, perc_train=70):
-    """
-    Splits the set of data into data for training and data for testing based on the sequence of measurements.
-    This can be used if we want to use an LSTM to achieve classification since it takes count of the sequence of values.
-    :param users_measurements: the array-like object of Measurement sets containing user_id and sessions
-    :param perc_train: the percentage of records used for training
-    :return: an array-like object of Measurement objects for training and an array-like object for testing
-    """
-
-
 def train_test_split_session(users_measurements, n_session_train = 2):
     """
     Splits the set of data into data for training and data for testing based on the session id contained in the Measuremnet object.
@@ -138,58 +137,137 @@ def train_test_split_session(users_measurements, n_session_train = 2):
     :param n_session_train: the number of sessions used for training (the rest will be used for testing)
     :return: an array-like object of Measurement objects for training and an array-like object for testing
     """
+    # Create an instance of a scaler
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    # For each subject, scale data in order to have them between 0 and 1
+    # Scale all the data to be values between 0 and 1
+    for user_measurement in users_measurements:
+        # Apply scaling
+        new_values = scaler.fit_transform(user_measurement.values)
+        # Change subject data with the scaled ones
+        user_measurement.values = new_values
 
-def classification_by_random_forest(x_train, y_train, grid_search = False):
+    # Create lists of tuples (m, i) where m is a numpy array and i is the id of the subject (source of measurements).
+    train_data = []
+    test_data = []
+
+    # For each user extract the rows of each session
+    for user_measurement in users_measurements:
+        first_session_rows = user_measurement.sessions[1]
+        second_session_rows = user_measurement.sessions[2]
+
+        # Split data into three list of values containing each session
+        first_session_measurements = user_measurement.values[:first_session_rows]
+        second_session_measurements = user_measurement.values[first_session_rows:second_session_rows]
+        third_session_measurements = user_measurement.values[second_session_rows:]
+
+        user_session_measurements = [first_session_measurements, second_session_measurements, third_session_measurements]
+
+        # Gather train data
+        for i in range(n_session_train):
+            train_data_0 = (user_session_measurements[i], user_measurement.subject_id)
+            train_data.append(train_data_0)
+
+        # Gather test data
+        for i in range(n_session_train, len(user_session_measurements)):
+            test_data_0 = (user_session_measurements[i], user_measurement.subject_id)
+            test_data.append(test_data_0)
+
+    # Create a list of measurements (x_train) and a list of labels (y_train) for training data
+    x_train = train_data[0][0]
+    y_train = []
+
+    # Append one label for each measurement of the first session
+    for _ in range(len(x_train)):
+        y_train.append(train_data[0][1])
+
+    # Appending the other two sessions
+    for i, single_user in enumerate(train_data[1:]):
+        # Reshape the list in order to always have the same number of columns
+        if i > 0:
+            train_0 = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
+        else:
+            train_0 = single_user
+
+        # Append the measurements to the list of training data
+        x_train = np.concatenate((x_train, train_0[0]))
+        # Append one label for each measurement
+        for _ in range(len(train_0[0])):
+            y_train.append(single_user[1])
+
+    # Convert to a numpy array
+    y_train = np.array(y_train)
+
+    # Create a list of measurements (x_test) and a list of labels (y_test) for test data
+    x_test = test_data[0][0]
+    y_test = []
+
+    # Append one label for each measurement of the first session
+    for _ in range(len(x_test)):
+        y_test.append(test_data[0][1])
+
+    # Append the other two sessions
+    for single_user in test_data[1:]:
+        # Reshape the list in order to always have the same number of columns
+        test_0 = (np.delete(single_user[0], np.s_[-1:], axis=1), single_user[1])
+        # Append the measurements to the list of testing data
+        x_test = np.concatenate((x_test, test_0[0]))
+        # Append the subject label for each measurement
+        for _ in range(len(test_0[0])):
+            y_test.append(single_user[1])
+
+    # Convert to a numpy array
+    y_test = np.array(y_test)
+
+    # Shuffle data so that the algorithm doesn't train on the order of subject
+    # Zip the arrays together to keep coherence
+    train_zip = list(zip(x_train, y_train))
+    test_zip = list(zip(x_test, y_test))
+
+    # Shuffle zipped lists
+    np.random.shuffle(train_zip)
+    np.random.shuffle(test_zip)
+
+    # Unzip lists
+    x_train, y_train = zip(*train_zip)
+    x_test, y_test = zip(*test_zip)
+
+    # Convert back to numpy arrays
+    x_train, y_train, x_test, y_test = np.array(x_train), np.array(y_train), np.array(x_test), np.array(y_test)
+
+    return x_train, y_train, x_test, y_test
+
+
+def classification_by_random_forest(x_train, y_train):
     """
     Trains a model using the random forest algorithm.
     :param x_train: the measurements for the training
     :param y_train: the labels for the training
-    :param grid_search: enable the grid search for hyperparameters computation (slower - default False)
     :return: the trained model
     """
-    # Define the new model
-    model = None
-    # Check the grid_search parameter
-    if grid_search:
-        # Create a tuner
-        tuner = tfdf.tuner.RandomSearch(num_trials=10)
+    # Define the new model as a RandomForestModel
+    model = tfdf.keras.RandomForestModel()
 
-        # Number of trees in random forest
-        n_estimators = [int(x) for x in np.linspace(start=200, stop=500, num=10)]
-        # Maximum number of levels in tree
-        max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
-        # Method of selecting samples for training each tree
-        bootstrap = [True, False]
-
-        # Tune the random search
-        tuner.choice("num_trees", n_estimators)
-        tuner.choice("max_depth", max_depth)
-        tuner.choice("bootstrap_training_dataset", bootstrap)
-
-        # Create a tuned random forest model
-        model = tfdf.keras.RandomForestModel(tuner=tuner)
-        # Fit the random search model
-        model.fit(x_train, y_train)
-    else:
-        # Create a simple random forest model
-        model = tfdf.keras.RandomForestModel()
-        # Fit the random forest model
-        model.fit(x_train, y_train, verbose=1)
+    # Fit the random forest model
+    model.fit(x_train, y_train, verbose=1)
 
     return model
 
 def prediction_by_random_forest(model, x_test):
     """
-        Makes predictions given a model trained with a random forest algorithm
-        :param model: the pre-trained model
-        :param x_test: the measurements of the test portion of the dataset
-        :return: the predictions
-        """
+    Makes predictions given a model trained with a random forest algorithm
+    :param model: the pre-trained model
+    :param x_test: the measurements of the test portion of the dataset
+    :return: the predictions
+    """
+
     # Make predictions
     print("\n## INFO: starting predictions")
     predictions = model.predict(x_test, verbose=1)
+
     # Round values to the nearest integer
     predictions = np.round(predictions)
+
     # Create the list of outputs
     predictions_0 = []
 
@@ -197,60 +275,34 @@ def prediction_by_random_forest(model, x_test):
     for val in predictions:
         val = np.argmax(val)
         predictions_0.append(val)
+    
+    predictions = predictions_0
 
-    return predictions_0
-
-
-def classification_by_gridsearch(x_train, y_train, grid_search=False):
-    """
-
-    :param x_train:
-    :param y_train:
-    :return:
-    """
-    if grid_search:
-
-        param_grid = {
-            'n_estimators': [10, 50, 100],
-            'max_depth': [None, 5, 10],
-            'criterion': ['gini', 'entropy']
-        }
-
-        rfc = RandomForestClassifier()
-        grid_search = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
-        grid_search.fit(x_train, y_train)
-        print("Migliori parametri:", grid_search.best_params_)
-        print("Miglior punteggio di validazione incrociata:", grid_search.best_score_)
-        print("Miglior modello trovato:", grid_search.best_estimator_)
-
-    else:
-        print("else")
-
-
-def classification_by_randomfgridsearch(x_train, y_train):
-    """
-
-    :param x_train:
-    :param y_train:
-    :return:
-    """
-    model = RandomForestClassifier(n_estimators=100, max_depth=None, criterion='gini')
-    model.fit(x_train, y_train)
-    return model
-
-
-def prediction_by_randomfgridsearch(model, x_test):
-    """
-        Makes predictions given a model trained with a random forest algorithm
-        :param model: the pre-trained model
-        :param x_test: the measurements of the test portion of the dataset
-        :return: the predictions
-        """
-    # Make predictions
-    print("\n## INFO: starting predictions")
-    predictions = model.predict(x_test)
-    predictions = np.round(predictions)
     return predictions
+
+
+def classification_by_gridsearch(x_train, y_train):
+    """
+    Trains a model using the random forest algorithm and the gridsearch tecnique to compute the best params.
+    :param x_train: the measurements for the training
+    :param y_train: the labels for the training
+    :return: the trained model
+    """
+    param_grid = {
+        'n_estimators': [10, 50, 100],
+        'max_depth': [None, 5, 10],
+        'criterion': ['gini', 'entropy']
+    }
+
+    rfc = RandomForestClassifier()
+    grid_search = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+    grid_search.fit(x_train, y_train)
+    print("#### GridSearch output ####")
+    print("Migliori parametri:", grid_search.best_params_)
+    print("Miglior punteggio di validazione incrociata:", grid_search.best_score_)
+    print("Miglior modello trovato:", grid_search.best_estimator_)
+
+    return grid_search
 
 
 
