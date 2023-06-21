@@ -10,8 +10,6 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 
-from sklearn.model_selection import RandomizedSearchCV
-
 def train_test_split(users_measurements, perc_train=70):
     """
     Splits the set of data into data for training and data for testing.
@@ -186,7 +184,7 @@ def classification_by_xgboost(x_train, y_train):
     :param y_train:
     :return:
     """
-    # Hyperparameters
+    # Define hyperparameters
     params = {"objective": "reg:squarederror", "tree_method": "gpu_hist"}
 
     # Create a DMatrix based on x_train
