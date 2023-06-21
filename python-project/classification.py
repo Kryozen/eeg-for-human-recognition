@@ -134,29 +134,8 @@ def classification_by_random_forest(x_train, y_train, grid_search = False):
     :param y_train: the labels for the training
     :return: the trained model
     """
-    model = None
-    if grid_search:
-        # Create a tuner
-        tuner = tfdf.tuner.RandomSearch(num_trials=10)
-
-        # Number of trees in random forest
-        n_estimators = [int(x) for x in np.linspace(start=200, stop=500, num=10)]
-        # Maximum number of levels in tree
-        max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
-        # Method of selecting samples for training each tree
-        bootstrap = [True, False]
-
-        # Tune the random search
-        tuner.choice("num_trees", n_estimators)
-        tuner.choice("max_depth", max_depth)
-        tuner.choice("bootstrap_training_dataset", bootstrap)
-
-        # Create a tuned model
-        model = tfdf.keras.RandomForestModel(tuner=tuner)  # Fit the random search model
-        model.fit(x_train, y_train)
-    else:
-        model = tfdf.keras.RandomForestModel()
-        model.fit(x_train, y_train, verbose=1)
+    model = tfdf.keras.RandomForestModel()
+    model.fit(x_train, y_train, verbose=1)
 
     return model
 
@@ -173,40 +152,41 @@ def prediction_by_random_forest(model, x_test):
 
     predictions = np.round(predictions)
 
+    """
     predictions_0 = []
 
     # Adjust values
     for val in predictions:
         val = np.argmax(val)
         predictions_0.append(val)
+        
+    predictions = predictions_0
+    """
+    return predictions
 
-    return predictions_0
 
-
-def classification_by_gridsearch(x_train, y_train, grid_search=False):
+def classification_by_gridsearch(x_train, y_train):
     """
 
     :param x_train:
     :param y_train:
     :return:
     """
-    if grid_search:
+    param_grid = {
+        'n_estimators': [10, 50, 100],
+        'max_depth': [None, 5, 10],
+        'criterion': ['gini', 'entropy']
+    }
 
-        param_grid = {
-            'n_estimators': [10, 50, 100],
-            'max_depth': [None, 5, 10],
-            'criterion': ['gini', 'entropy']
-        }
+    rfc = RandomForestClassifier()
+    grid_search = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+    grid_search.fit(x_train, y_train)
 
-        rfc = RandomForestClassifier()
-        grid_search = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
-        grid_search.fit(x_train, y_train)
-        print("Migliori parametri:", grid_search.best_params_)
-        print("Miglior punteggio di validazione incrociata:", grid_search.best_score_)
-        print("Miglior modello trovato:", grid_search.best_estimator_)
+    print("Migliori parametri:", grid_search.best_params_)
+    print("Miglior punteggio di validazione incrociata:", grid_search.best_score_)
+    print("Miglior modello trovato:", grid_search.best_estimator_)
 
-    else:
-        print("else")
+    return grid_search
 
 
 def prediction_by_randomfgridsearch(model, x_test):
@@ -220,6 +200,7 @@ def prediction_by_randomfgridsearch(model, x_test):
     print("\n## INFO: starting predictions")
     predictions = model.predict(x_test)
     predictions = np.round(predictions)
+
     return predictions
 
 
