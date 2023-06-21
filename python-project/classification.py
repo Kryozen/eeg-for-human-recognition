@@ -207,7 +207,7 @@ def classification_by_gridsearch(x_train, y_train, grid_search=False):
 
     else:
         print("else")
-        
+
 
 def prediction_by_randomfgridsearch(model, x_test):
     """
