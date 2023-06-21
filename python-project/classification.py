@@ -400,7 +400,7 @@ def compute_metrics(confusion_matrix):
         tp = tn = fp = fn = 0
         for k, v in confusion_matrix.items():
             p, c = k
-            if p == c:
+            if p == c and p == cl:
                 tp += v
             elif p == cl and c != cl:
                 fp += v
