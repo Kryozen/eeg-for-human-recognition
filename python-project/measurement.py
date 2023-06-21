@@ -1,8 +1,10 @@
 class Measurement:
     """
-
+    This is a utility class for each user measurements.
+    Each instance of this class represents a user: it stores the user id, the user measurements and the session indexes informations.
     """
 
+    # The list of sensors
     columns = [
     #    'COUNTER',  # this field should be ignored
     #    'INTERPOLATED',  # this field should be ignored
@@ -22,8 +24,14 @@ class Measurement:
         'F4',
         'UNIX_TIMESTAMP'
     ]
+
+    # The list of measurement values
     values = None
+
+    # The id of the subject
     subject_id = None
+
+    # A dictionary of session indexes
     sessions = None
 
     def __init__(self, measurements, subject_id=None, sessions=None):
