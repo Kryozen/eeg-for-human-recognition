@@ -37,11 +37,10 @@ if __name__ == '__main__':
     # Starting Classification
     print("## INFO: starting classification...")
 
-    """ TEST TEST TEST"""
-    x_train, y_train, x_test, y_test = classification.train_test_split_session(users_measurements, 2)
-
     # Split data in train and test
-    # x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70)
+    # x_train, y_train, x_test, y_test = classification.train_test_split_session(users_measurements, 2) # Uncomment this for session split
+
+    x_train, y_train, x_test, y_test = classification.train_test_split(users_measurements, perc_train=70) # Uncomment this for random split
 
     # Compute a model for machine learning
     model = classification.classification_by_random_forest(x_train, y_train)
